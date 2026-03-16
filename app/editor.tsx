@@ -22,6 +22,7 @@ type EditorTab = "edit" | "preview";
 const TOOLBAR_ACTIONS = [
   { label: "H1", prefix: "# ", suffix: "", block: true },
   { label: "H2", prefix: "## ", suffix: "", block: true },
+  { label: "H3", prefix: "### ", suffix: "", block: true },
   { label: "B", prefix: "**", suffix: "**", block: false },
   { label: "I", prefix: "_", suffix: "_", block: false },
   { label: "~", prefix: "~~", suffix: "~~", block: false },

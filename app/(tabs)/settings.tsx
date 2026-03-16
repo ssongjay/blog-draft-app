@@ -125,7 +125,7 @@ export default function SettingsScreen() {
             style={styles.input}
             value={repo}
             onChangeText={setRepo}
-            placeholder="few-words-blog"
+            placeholder="blog-drafts"
             placeholderTextColor="#C7C7CC"
             autoCapitalize="none"
             autoCorrect={false}

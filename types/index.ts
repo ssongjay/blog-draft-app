@@ -59,7 +59,7 @@ export interface AppSettings {
 
 export const DEFAULT_SETTINGS: Omit<AppSettings, "token"> = {
   owner: "ssongjay",
-  repo: "few-words-blog",
+  repo: "blog-drafts",
   branch: "main",
   basePath: "tmp",
 };
