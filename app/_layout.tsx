@@ -39,6 +39,14 @@ export default function RootLayout() {
             headerShown: false,
           }}
         />
+        <Stack.Screen
+          name="new-draft"
+          options={{
+            presentation: "transparentModal",
+            headerShown: false,
+            animation: "fade",
+          }}
+        />
       </Stack>
     </AppContext.Provider>
   );

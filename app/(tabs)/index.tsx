@@ -8,8 +8,6 @@ import {
   ActivityIndicator,
   RefreshControl,
   Alert,
-  Modal,
-  TextInput,
 } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -29,10 +27,6 @@ export default function HomeScreen() {
   const [data, setData] = useState<CategoryWithDrafts[]>([]);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [showNewDraft, setShowNewDraft] = useState(false);
-  const [newCategory, setNewCategory] = useState("");
-  const [newTitle, setNewTitle] = useState("");
-  const [creating, setCreating] = useState(false);
 
   const fetchData = useCallback(async () => {
     if (!githubService.isConfigured) return;
@@ -51,7 +45,7 @@ export default function HomeScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      if (isConfigured && data.length === 0) {
+      if (isConfigured) {
         setLoading(true);
         fetchData().finally(() => setLoading(false));
       }
@@ -70,29 +64,6 @@ export default function HomeScreen() {
         i === index ? { ...item, expanded: !item.expanded } : item
       )
     );
-  };
-
-  const handleCreateDraft = async () => {
-    const category = newCategory.trim();
-    const title = newTitle.trim();
-    if (!category || !title) {
-      Alert.alert("입력 오류", "카테고리와 제목을 모두 입력하세요.");
-      return;
-    }
-    setCreating(true);
-    try {
-      const settings = await (await import("../../services/storage")).storage.getSettings();
-      const filePath = `${settings.basePath}/${category}/${title}.md`;
-      await githubService.saveDraft(filePath, `# ${title}\n\n`, undefined, `create: ${title}`);
-      setShowNewDraft(false);
-      setNewCategory("");
-      setNewTitle("");
-      await fetchData();
-    } catch (e: any) {
-      Alert.alert("생성 실패", e.message);
-    } finally {
-      setCreating(false);
-    }
   };
 
   const openEditor = (draft: Draft) => {
@@ -184,86 +155,11 @@ export default function HomeScreen() {
 
       <TouchableOpacity
         style={styles.fab}
-        onPress={() => setShowNewDraft(true)}
+        onPress={() => router.push("/new-draft")}
         activeOpacity={0.8}
       >
         <Ionicons name="add" size={28} color="#FFFFFF" />
       </TouchableOpacity>
-
-      <Modal visible={showNewDraft} animationType="slide" transparent>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>새 초안</Text>
-
-            <Text style={styles.modalLabel}>카테고리</Text>
-            <TextInput
-              style={styles.modalInput}
-              value={newCategory}
-              onChangeText={setNewCategory}
-              placeholder="예: 의료_의약"
-              placeholderTextColor="#C7C7CC"
-              autoCapitalize="none"
-            />
-
-            {data.length > 0 && (
-              <View style={styles.categoryChips}>
-                {data.map((d) => (
-                  <TouchableOpacity
-                    key={d.category.path}
-                    style={[
-                      styles.chip,
-                      newCategory === d.category.name && styles.chipActive,
-                    ]}
-                    onPress={() => setNewCategory(d.category.name)}
-                  >
-                    <Text
-                      style={[
-                        styles.chipText,
-                        newCategory === d.category.name && styles.chipTextActive,
-                      ]}
-                    >
-                      {d.category.name}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            )}
-
-            <Text style={styles.modalLabel}>제목</Text>
-            <TextInput
-              style={styles.modalInput}
-              value={newTitle}
-              onChangeText={setNewTitle}
-              placeholder="예: 치매는 왜 생기는가"
-              placeholderTextColor="#C7C7CC"
-            />
-
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={styles.modalCancel}
-                onPress={() => {
-                  setShowNewDraft(false);
-                  setNewCategory("");
-                  setNewTitle("");
-                }}
-              >
-                <Text style={styles.modalCancelText}>취소</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.modalCreate, creating && { opacity: 0.6 }]}
-                onPress={handleCreateDraft}
-                disabled={creating}
-              >
-                {creating ? (
-                  <ActivityIndicator color="#FFFFFF" />
-                ) : (
-                  <Text style={styles.modalCreateText}>생성</Text>
-                )}
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
     </View>
   );
 }
@@ -337,63 +233,4 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 8,
   },
-
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.4)",
-    justifyContent: "flex-end",
-  },
-  modalContent: {
-    backgroundColor: "#FFFFFF",
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: 24,
-    paddingBottom: 40,
-  },
-  modalTitle: { fontSize: 20, fontWeight: "700", color: "#1C1C1E", marginBottom: 20 },
-  modalLabel: { fontSize: 14, fontWeight: "600", color: "#8E8E93", marginBottom: 6 },
-  modalInput: {
-    borderWidth: 1,
-    borderColor: "#E5E5EA",
-    borderRadius: 10,
-    padding: 12,
-    fontSize: 16,
-    color: "#1C1C1E",
-    backgroundColor: "#F2F2F7",
-    marginBottom: 16,
-  },
-  categoryChips: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-    marginBottom: 16,
-  },
-  chip: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    backgroundColor: "#F2F2F7",
-    borderWidth: 1,
-    borderColor: "#E5E5EA",
-  },
-  chipActive: { backgroundColor: "#007AFF", borderColor: "#007AFF" },
-  chipText: { fontSize: 13, color: "#1C1C1E" },
-  chipTextActive: { color: "#FFFFFF" },
-  modalButtons: { flexDirection: "row", gap: 12, marginTop: 8 },
-  modalCancel: {
-    flex: 1,
-    padding: 14,
-    borderRadius: 12,
-    backgroundColor: "#F2F2F7",
-    alignItems: "center",
-  },
-  modalCancelText: { fontSize: 16, fontWeight: "600", color: "#1C1C1E" },
-  modalCreate: {
-    flex: 1,
-    padding: 14,
-    borderRadius: 12,
-    backgroundColor: "#007AFF",
-    alignItems: "center",
-  },
-  modalCreateText: { fontSize: 16, fontWeight: "600", color: "#FFFFFF" },
 });

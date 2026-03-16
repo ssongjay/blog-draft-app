@@ -1,5 +1,5 @@
-import * as SecureStore from "expo-secure-store";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Platform } from "react-native";
 import { AppSettings, DEFAULT_SETTINGS, LocalDraft } from "../types";
 
 const KEYS = {
@@ -8,25 +8,36 @@ const KEYS = {
   LOCAL_DRAFTS: "local_drafts",
 };
 
-/**
- * 로컬 스토리지 서비스
- * - GitHub 토큰은 SecureStore (암호화)
- * - 나머지 설정과 초안은 AsyncStorage
- */
+async function getSecureStore() {
+  if (Platform.OS === "web") return null;
+  return await import("expo-secure-store");
+}
+
 export const storage = {
-  /** GitHub 토큰 저장 (암호화) */
   async saveToken(token: string): Promise<void> {
-    await SecureStore.setItemAsync(KEYS.TOKEN, token);
+    const SecureStore = await getSecureStore();
+    if (SecureStore) {
+      await SecureStore.setItemAsync(KEYS.TOKEN, token);
+    } else {
+      await AsyncStorage.setItem(KEYS.TOKEN, token);
+    }
   },
 
-  /** GitHub 토큰 조회 */
   async getToken(): Promise<string | null> {
-    return SecureStore.getItemAsync(KEYS.TOKEN);
+    const SecureStore = await getSecureStore();
+    if (SecureStore) {
+      return SecureStore.getItemAsync(KEYS.TOKEN);
+    }
+    return AsyncStorage.getItem(KEYS.TOKEN);
   },
 
-  /** GitHub 토큰 삭제 */
   async deleteToken(): Promise<void> {
-    await SecureStore.deleteItemAsync(KEYS.TOKEN);
+    const SecureStore = await getSecureStore();
+    if (SecureStore) {
+      await SecureStore.deleteItemAsync(KEYS.TOKEN);
+    } else {
+      await AsyncStorage.removeItem(KEYS.TOKEN);
+    }
   },
 
   /** 앱 설정 저장 */
